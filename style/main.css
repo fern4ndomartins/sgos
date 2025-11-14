@@ -1,0 +1,352 @@
+/* =========================================
+   COLOR PALETTE — Linear/Notion-inspired
+   ========================================= */
+@define-color bg        #0d0d0d;
+@define-color bg_alt    #151515;
+@define-color surface   #1a1a1a;
+@define-color surface2  #202020;
+@define-color border    #2a2a2a;
+@define-color border_subtle #1f1f1f;
+
+@define-color text      #e0e0e0;
+@define-color text_dim  #888888;
+@define-color text_muted #666666;
+@define-color title     #ffffff;
+@define-color accent    #5e5ce6;
+@define-color accent_hover #7371f0;
+@define-color danger    #ff3b30;
+@define-color danger_hover #ff5449;
+@define-color success   #34c759;
+@define-color success_hover #3ed564;
+
+/* =========================================
+   GLOBAL WINDOW
+   ========================================= */
+window {
+    background: @bg;
+    color: @text;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+}
+
+
+/* =========================================
+STUFF
+========================================= */
+
+
+
+/* =========================================
+   TITLES & HEADERS
+   ========================================= */
+.title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.5px;
+    margin-bottom: 24px;
+    color: @title;
+}
+
+.section-header {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: @text_muted;
+    margin: 20px 0 12px 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+/* =========================================
+   ENTRY FIELDS
+   ========================================= */
+entry {
+    padding: 12px 14px;
+    border-radius: 8px;
+    border: 1.5px solid @border;
+    background: @surface;
+    color: @text;
+    margin-bottom: 12px;
+    font-size: 14px;
+    transition: all 200ms ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+entry:focus {
+    border: 1.5px solid @accent;
+    background: @surface2;
+    box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.1),
+                0 1px 3px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+entry > placeholder {
+    color: @text_dim;
+}
+
+/* =========================================
+   BUTTONS — Minimalist Linear-style
+   ========================================= */
+button {
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 500;
+    font-size: 13px;
+    background: transparent;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    transition: all 150ms ease;
+    margin: 2px;
+    min-height: 32px;
+}
+
+button:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: #666666;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+button:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+button.primary {
+    background: transparent;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+button.primary:hover {
+    background: rgba(94, 92, 230, 0.1);
+    border-color: @accent;
+    box-shadow: 0 2px 8px rgba(94, 92, 230, 0.2);
+}
+
+button.danger {
+    background: transparent;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+button.danger:hover {
+    background: rgba(255, 59, 48, 0.1);
+    border-color: @danger;
+    box-shadow: 0 2px 8px rgba(255, 59, 48, 0.2);
+}
+
+button.success {
+    background: transparent;
+    border: 1px solid #404040;
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+button.success:hover {
+    background: rgba(52, 199, 89, 0.1);
+    border-color: @success;
+    box-shadow: 0 2px 8px rgba(52, 199, 89, 0.2);
+}
+
+/* Flat/Ghost Button */
+button.flat {
+    background: transparent;
+    border: none;
+    color: @text_dim;
+    box-shadow: none;
+    padding: 8px 12px;
+    margin: 0;
+}
+
+button.flat:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: @text;
+    transform: none;
+}
+/* =========================================
+   CARD CONTAINERS
+   ========================================= */
+.card {
+    background: @bg_alt;
+    padding: 32px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    border: 1px solid @border_subtle;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12),
+                0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================================
+   ROWS 
+   ========================================= */
+.row {
+    background: @surface;
+    border: 1px solid @border;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    transition: all 150ms ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.row:hover {
+    background: @surface2;
+    border-color: #333333;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.row label {
+    font-size: 14px;
+    font-weight: 500;
+    color: @text;
+    letter-spacing: -0.2px;
+}
+
+.row button {
+    padding: 6px 10px;
+    font-size: 12px;
+    min-height: 28px;
+    font-weight: 500;
+    margin: 0 2px;
+}
+
+/* =========================================
+   COMBOBOX / DROPDOWN
+   ========================================= */
+combobox {
+    border-radius: 8px;
+    border: 1.5px solid @border;
+    background: @surface;
+    padding: 2px;
+}
+
+combobox:focus {
+    border-color: @accent;
+    box-shadow: 0 0 0 3px rgba(94, 92, 230, 0.1);
+}
+
+combobox button {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    padding: 10px 12px;
+}
+
+combobox button:hover {
+    background: @surface2;
+}
+
+/* =========================================
+   SCROLLBARS — Minimalist
+   ========================================= */
+scrolledwindow {
+    background: @bg;
+}
+
+scrollbar {
+    background: transparent;
+    border: none;
+}
+
+scrollbar slider {
+    background: #333333;
+    border-radius: 6px;
+    min-width: 8px;
+    min-height: 8px;
+}
+
+scrollbar slider:hover {
+    background: #444444;
+}
+
+/* =========================================
+   DIVIDER
+   ========================================= */
+.divider {
+    min-height: 1px;
+    background: @border_subtle;
+    margin: 16px 0;
+}
+
+/* =========================================
+   ERROR MESSAGES
+   ========================================= */
+/* .dialog-error {
+    background: rgba(255, 59, 48, 0.15);
+    border: 1px solid @danger;
+    color: @danger;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 12px;
+} */
+
+/* =========================================
+   SPACING REFINEMENTS
+   ========================================= */
+box {
+}
+
+box.vertical {
+}
+
+/* =========================================
+   STACK TRANSITIONS
+   ========================================= */
+stack {
+    transition: all 200ms ease;
+}
+
+/* =========================================
+   WINDOW HEADER 
+   ========================================= */
+headerbar {
+    background: @bg_alt;
+    border-bottom: 1px solid @border_subtle;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+
+headerbar button {
+    border: none;
+    background: transparent;
+    box-shadow: none;
+}
+
+headerbar button:hover {
+    background: @surface;
+}
+
+/* Scrolled windows */
+/* Scrolled windows */
+/* Scrolled windows */
+/* Scrolled windows */
+
+scrolledwindow {
+    background: @bg;
+}
+
+scrolledwindow scrollbar {
+    background: transparent;
+    border: none;
+}
+
+scrolledwindow scrollbar slider {
+    background: #333333;
+    border-radius: 3px;
+    min-width: 6px;
+}
+
+scrolledwindow scrollbar slider:hover {
+    background: #444444;
+}
+
+.admin_users_box,
+.admin_services_box {
+    margin: 12px;
+}
