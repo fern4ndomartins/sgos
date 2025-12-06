@@ -125,3 +125,11 @@ bool assign_technician(int technician_id, int service_id);
 // std::optional<UserRow> get_service_by_id(int user_id, sqlite3 *db);
 std::optional<UserRow> get_user_by_name(std::string full_name, sqlite3 *db);
 
+struct AssignedTechnicians {
+    int technician_id;
+    int service_id;
+    int status;
+};
+
+std::vector<AssignedTechnicians> get_technicians(sqlite3 *db, int service_id);
+

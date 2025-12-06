@@ -123,6 +123,7 @@ CREATE TABLE IF NOT EXISTS service_technicians (
     service_id INTEGER NOT NULL,
     technician_id INTEGER NOT NULL,
     assigned_at DEFAULT CURRENT_TIMESTAMP,
+    status INTEGER NOT NULL,
     PRIMARY KEY (service_id, technician_id),
     FOREIGN KEY (service_id) REFERENCES services(service_id) ON DELETE CASCADE,
     FOREIGN KEY (technician_id) REFERENCES users(user_id) ON DELETE CASCADE
@@ -359,9 +360,8 @@ std::vector<UserRow> get_users(sqlite3 *db) {
 std::vector<ServiceRow> get_services(sqlite3 *db, int only_assigned_to) {
     std::vector<ServiceRow> out;
     std::string sql = "SELECT s.service_id, s.client_name, s.client_phone, s.client_email, s.equipment_desc, s.problem_report, s.status FROM services s";
-    if (only_assigned_to > 0) {
-        sql += " JOIN service_technicians st ON st.service_id = s.service_id WHERE st.technician_id = ? ";
-    }
+    if (only_assigned_to > 0) {sql += " JOIN service_technicians st ON st.service_id = s.service_id WHERE st.technician_id = ? ";}
+    
     sql += " ORDER BY created_at DESC;";
     sqlite3_stmt *stmt = nullptr;
     std::cout << "getting service \n";
@@ -379,6 +379,27 @@ std::vector<ServiceRow> get_services(sqlite3 *db, int only_assigned_to) {
         s.equipment = reinterpret_cast<const char*>(sqlite3_column_text(stmt,4));
         s.problem_report = reinterpret_cast<const char*>(sqlite3_column_text(stmt,5) ? sqlite3_column_text(stmt,5) : (const unsigned char*)"");
         s.status = reinterpret_cast<const char*>(sqlite3_column_text(stmt,6));
+        out.push_back(std::move(s));
+    }
+    sqlite3_finalize(stmt);
+    std::cout <<"got it \n";
+    return out;
+}
+
+std::vector<AssignedTechnicians> get_technicians(sqlite3 *db, int service_id) {
+    std::vector<AssignedTechnicians> out;
+    std::string sql = "SELECT st.service_id, st.technician_id, st.status FROM service_technicians st WHERE st.service_id = ?";
+    sqlite3_stmt *stmt = nullptr;
+    std::cout << "getting service \n";
+    if (sqlite3_prepare_v2(db, sql.c_str(), -1, &stmt, nullptr) != SQLITE_OK) {
+        std::cerr << "get_services prepare failed: " << sqlite3_errmsg(db) << "\n";
+        return out;
+    }
+    sqlite3_bind_int(stmt, 1, service_id);
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        AssignedTechnicians s;
+        s.technician_id = sqlite3_column_int(stmt, 1);
+        s.status = sqlite3_column_int(stmt, 3);
         out.push_back(std::move(s));
     }
     sqlite3_finalize(stmt);
@@ -501,8 +522,8 @@ bool add_log(
 
 bool assign_technician(int technician_id, int service_id) {
     const char *sql =
-        "INSERT INTO service_technicians (service_id, technician_id) "
-        "VALUES (?, ?);";
+        "INSERT INTO service_technicians (service_id, technician_id, status) "
+        "VALUES (?, ?, ?);";
     sqlite3_stmt *stmt = nullptr;
     if (sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK) {
         std::cerr << "assign_technician prepare failed: " << sqlite3_errmsg(db) << "\n";
@@ -510,6 +531,7 @@ bool assign_technician(int technician_id, int service_id) {
     }
     sqlite3_bind_int(stmt, 1,service_id);
     sqlite3_bind_int(stmt, 2, technician_id);
+    sqlite3_bind_int(stmt, 3, 0);
 
     bool ok = true;
     if (sqlite3_step(stmt) != SQLITE_DONE) {

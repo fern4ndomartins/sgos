@@ -4,6 +4,7 @@
 #include <optional>
 #include <regex>
 #include <stack>
+#include <string>
 #include <vector>
 #include "../include/main.h"
 #include "gtkmm/alertdialog.h"
@@ -11,6 +12,7 @@
 #include "gtkmm/button.h"
 #include "gtkmm/comboboxtext.h"
 #include "gtkmm/entry.h"
+#include "gtkmm/enums.h"
 #include "gtkmm/label.h"
 #include "gtkmm/object.h"
 
@@ -46,6 +48,28 @@ public:
     UserRow user;
 };
 
+class AssignedTechnicianWidget : public Gtk::Box {
+public:
+AssignedTechnicianWidget(const AssignedTechnicians& u, std::function<void(int, int)> on_delete)
+    : Gtk::Box(Gtk::Orientation::HORIZONTAL, 6), user(u)
+    {
+        get_style_context()->add_class("row");
+        
+        auto label = Gtk::make_managed<Gtk::Label>("#" + std::to_string(u.technician_id) + "   " + std::to_string(u.status));
+        label->set_halign(Gtk::Align::START);
+        label->set_hexpand(true);
+        append(*label);
+        
+        auto del_btn  = Gtk::make_managed<Gtk::Button>("Delete");
+        del_btn->get_style_context()->add_class("danger");
+
+        append(*del_btn);
+        del_btn->signal_clicked().connect([on_delete, u] { on_delete(u.technician_id, u.service_id); });
+    }
+
+    AssignedTechnicians user;
+};
+
 class ServiceRowWidget : public Gtk::Box {
 public:
     ServiceRowWidget(const ServiceRow& s, std::function<void(int)> on_edit, std::function<void(int)> on_delete)
@@ -58,14 +82,12 @@ public:
         label->set_hexpand(true);
         append(*label);
         
-        auto assign_btn = Gtk::make_managed<Gtk::Button>("Assign");
+        auto assign_btn = Gtk::make_managed<Gtk::Button>("Técnicos");
         assign_btn->get_style_context()->add_class("primary");
         auto edit_btn = Gtk::make_managed<Gtk::Button>("Edit");
         edit_btn->get_style_context()->add_class("primary");
         auto del_btn  = Gtk::make_managed<Gtk::Button>("Delete");
         del_btn->get_style_context()->add_class("danger");
-
-        
 
         append(*assign_btn);
         append(*edit_btn);
@@ -74,31 +96,88 @@ public:
         edit_btn->signal_clicked().connect([on_edit, s] { on_edit(s.service_id); });
         del_btn->signal_clicked().connect([on_delete, s] { on_delete(s.service_id); });
     }
+    void on_unassign(int technician_id, int service_id) {}
+
     void on_assign_technician_clicked(int service_id) {
         auto win = Gtk::make_managed<Gtk::Window>();
         win->set_title("Assign Technician");
         win->set_modal(true);
-        auto box = Gtk::make_managed<Gtk::Box>();
-        auto uv = get_users(db);
-        auto technicians_box = Gtk::make_managed<Gtk::ComboBoxText>();
-        for (auto &u: uv) {
-            if (u.role_id == 3) {
-                technicians_box->append(u.full_name);
+        auto teclabel = Gtk::make_managed<Gtk::Label>("Técnicos atribuídos:");
+        auto teclabel2 = Gtk::make_managed<Gtk::Label>("Não há técnicos atribuídos.");
+
+        auto box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+        auto techbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+        box->append(*teclabel);
+        auto as = get_technicians(db, service_id);
+        if (as.size() == 0) {
+            box->append(*teclabel2);
+        }
+        else {
+            for (auto &s : as) {
+                auto w = Gtk::make_managed<AssignedTechnicianWidget>(s,
+                [this](int technician_id, int service_id){ on_unassign(technician_id, service_id); });
+                techbox->append(*w);
             }
         }
+        box->append(*techbox);
+
+        auto combbox = Gtk::make_managed<Gtk::ComboBoxText>();
+        auto uv = get_users(db);
+        for (auto &u : uv) {
+            if (u.role_id == 3 && std::none_of(as.begin(), as.end(),
+                     [&](const auto &s) { return s.technician_id == u.user_id; })) {
+                combbox->append(std::to_string(u.user_id), u.full_name);
+
+            }
+        }
+
+        box->append(*combbox);
+        
         auto confirm_assign_btn = Gtk::make_managed<Gtk::Button>("Confirm");
 
-        box->append(*technicians_box);
         box->append(*confirm_assign_btn);
 
         win->set_child(*box);
 
-        confirm_assign_btn->signal_clicked().connect([technicians_box, service_id, win](){
-            auto tech = get_user_by_name(technicians_box->get_active_text(), db);
-            assign_technician(tech->user_id, service_id);
-            std::cout << "assigned.\n";
+        confirm_assign_btn->signal_clicked().connect([win](){
             win->close();
         });
+        combbox->signal_changed().connect(
+    [combbox, service_id, this, techbox](){
+
+        auto id_str = combbox->get_active_id();
+        if (id_str.empty())
+            return; // ignore reset signals
+
+        int id = std::stoi(id_str);
+        
+        auto tech = get_user_by_id(id, db);
+        assign_technician(tech->user_id, service_id);
+
+        auto new_tech = AssignedTechnicians{ tech->user_id, service_id, 0 };
+        auto w = Gtk::make_managed<AssignedTechnicianWidget>(
+            new_tech,
+            [this](int technician_id, int service_id){
+                on_unassign(technician_id, service_id);
+            }
+        );
+        techbox->append(*w);
+
+        combbox->remove_all();
+
+        auto uv = get_users(db);
+        auto as = get_technicians(db, service_id);
+
+        for (auto &u : uv) {
+            if (u.role_id == 3 &&
+                std::none_of(as.begin(), as.end(),
+                    [&](auto &s){ return s.technician_id == u.user_id; }))
+            {
+                combbox->append(std::to_string(u.user_id), u.full_name);
+            }
+        }
+    }
+);
 
         win->show();        
     }
@@ -174,6 +253,7 @@ protected:
     void on_return_clicked();
     void update_return_button_visibility();
 
+    void show_technician_services();
     void on_login_clicked();
     void show_admin_users();
     void on_add_user_clicked();
@@ -268,7 +348,6 @@ MyWindow::MyWindow(sqlite3 *db_) : db(db_) {
     stack.add(technician_services_scrolled, "technician_services_list");
 
     set_child(stack);
-
 
     login_box.set_margin(20);
     login_box.get_style_context()->add_class("card");
@@ -425,19 +504,24 @@ void MyWindow::on_login_clicked() {
     } else if (uid_opt->role_id == 2) {
         show_admin_services();
     } else {
-        std::vector<ServiceRow> sv = get_services(db, logged_in_user_id);
-        clear_container(technician_services_box);
-        
-        technician_services_box.append(technician_services_box_title);
-        
-        for (auto &s: sv) {
-            auto w = Gtk::make_managed<ServiceRowWidget>(s,
-                [this](int id){ on_edit_service(id); },
-                [this](int id){ on_delete_service(id); });
-            technician_services_box.append(*w);
-        }
-        navigate_to("technician_services_list");
+        show_technician_services();
     }
+}
+
+void MyWindow::show_technician_services() {
+    std::vector<ServiceRow> sv = get_services(db, logged_in_user_id);
+    clear_container(technician_services_box);
+    
+    technician_services_box.append(technician_services_box_title);
+    technician_services_box.append(technician_services_box_subtitle);
+    
+    for (auto &s: sv) {
+        auto w = Gtk::make_managed<ServiceRowWidget>(s,
+            [this](int id){ on_edit_service(id); },
+            [this](int id){ on_delete_service(id); });
+        technician_services_box.append(*w);
+    }
+    navigate_to("technician_services_list");
 }
 
 void MyWindow::show_admin_users() {
@@ -957,5 +1041,7 @@ int main(int argc, char* argv[])
 
     initDatabase(db);
     add_user("admin", "admin", "admin", "1111", 1, db);
+    add_user("tech", "tech", "tech", "1111", 3, db);
+    add_user("com", "com", "com", "1111", 2, db);
     return app->make_window_and_run<MyWindow>(argc, argv, db);
 }
